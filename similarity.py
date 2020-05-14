@@ -33,7 +33,8 @@ def split_name(s, t=['นาย','นางสาว','นาง','น.ส.','�
     k = np.array([s[0].find(t) for t in t])
     if (k==0).sum()>0:
         n = t[np.argmax(k==0)]
-        if len(n)!=len(s[0]): s[0] = s[0].replace(n,'')
+        if len(n)!=len(s[0]): 
+            s[0] = s[0][s[0].find(n):len(n)]
         if (s[0]==n) & (len(s)>2): s = s[1:]
     if len(s)==1: s += ['']
     else: s = [s[0],' '.join(s[1:])]
