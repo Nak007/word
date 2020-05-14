@@ -231,6 +231,15 @@ def find_match(a, b, u=None, n=30, remove=[' '], sep=' , '):
     sep : str, optional, (default=' , ')
     \t A separator that is used to join results 
     \t when "lcs" method returns more than one.
+    
+    Returns
+    -------
+    dictionary of pd.to_dict format
+    {'text'   : [...], # matching text
+     'score'  : [...], # 0 ≤ similarity score ≤ 1
+     'index'  : [...], # index of similar texts
+     'found'  : [...], # similar texts found
+     'n_found': [...]} # number of results found
     '''
     t1, t2, t3 = progress_bar()
     if u is None:
@@ -247,8 +256,11 @@ def find_match(a, b, u=None, n=30, remove=[' '], sep=' , '):
         
         s = unicode_array(s0)
         d = np.sqrt((u-s)**2).sum(axis=1)
-        m = np.percentile(d,n/len(u)*100)
-        i = k[d<=m].ravel()
+        # When there is no perfect match
+        if min(d)>0:
+            m = np.percentile(d,n/len(u)*100)
+            i = k[d<=m].ravel()
+        else: i = np.array([np.argmin(d)])
         x = max_lcs(s0, b[i], remove)
         
         a0.append(s0)
