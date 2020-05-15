@@ -29,12 +29,15 @@ def split_name(s, t=['นาย','นางสาว','นาง','น.ส.','�
     default:['นาย','นางสาว','นาง','น.ส.','น.ส']
     \t List of titles to be removed from name.
     '''
+    3631
     s = np.char.split(str(s)).tolist()
     k = np.array([s[0].find(t) for t in t])
     if (k==0).sum()>0:
         n = t[np.argmax(k==0)]
-        if len(n)!=len(s[0]): 
-            s[0] = s[0][s[0].find(n)+len(n):]
+        if len(n)!=len(s[0]):
+            t = s[0][s[0].find(n)+len(n):]
+            # Next chr cannot be vowel
+            if ord(t[0]) < 3631: s[0] = t 
         if (s[0]==n) & (len(s)>2): s = s[1:]
     if len(s)==1: s += ['']
     else: s = [s[0],' '.join(s[1:])]
@@ -164,11 +167,11 @@ def lcs(s1, s2, remove=[' ']):
             else: a[i,j] = max(a[i-1,j],a[i,j-1]) 
     return a[-1,-1]
 
-def max_lcs(s, a, remove=[' ']):
+def max_wlcs(s, a, remove=[' ']):
     
     '''
-    Find maximum "Longest Common Subsequence" from
-    input array "a"
+    Find maximum of weighted "Longest Common Subsequence" 
+    from input array "a"
     
     Parameters
     ----------
@@ -188,7 +191,7 @@ def max_lcs(s, a, remove=[' ']):
     - text  : array of matched texts
     - score : maximum LCS score
     '''
-    k = np.array([lcs(s,u,remove) for u in a])
+    k = np.array([lcs(s,u,remove)/len(u) for u in a])
     return dict(index=np.arange(len(a))[k==max(k)], 
                 text=np.array(a)[k==max(k)], score=max(k))
 
@@ -257,16 +260,16 @@ def find_match(a, b, u=None, n=30, remove=[' '], sep=' , '):
         
         s = unicode_array(s0)
         d = np.sqrt((u-s)**2).sum(axis=1)
-        # When there is no perfect match
-        if min(d)>0:
+        if min(d)==0:
+            i = k[d<=0].ravel()
+        else: # When there is no perfect match
             m = np.percentile(d,n/len(u)*100)
             i = k[d<=m].ravel()
-        else: i = np.array([np.argmin(d)])
-        x = max_lcs(s0, b[i], remove)
+        x = max_wlcs(s0, b[i], remove)
         
         a0.append(s0)
-        n_max = max([len(t) for t in x['text']])
-        a1.append(x['score']/float(n_max))
+        # Divide score by its own length
+        a1.append(np.mean(x['score']))
         a2.append(sep.join(i[x['index']].astype(str)))
         a3.append(sep.join(x['text']))
         a4.append(len(x['text']))
@@ -288,7 +291,7 @@ def progress_bar():
     s = ' - ETA: {}  -  {}: {:,.3g}'
     t3 = widgets.HTMLMath(value=s.format(np.nan,'metric',0))
     w = widgets.VBox([t1, widgets.HBox([t2,t3])])
-    display(w); time.sleep(1)
+    display(w)
     return t1, t2, t3
 
 def hms(seconds):
