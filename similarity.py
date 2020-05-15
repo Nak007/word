@@ -29,7 +29,8 @@ def split_name(s, t=['นาย','นางสาว','นาง','น.ส.','�
     default:['นาย','นางสาว','นาง','น.ส.','น.ส']
     \t List of titles to be removed from name.
     '''
-    3631
+    c = [n for n in np.arange(3585, 3663) 
+         if n not in np.arange(3643,3653)]
     s = np.char.split(str(s)).tolist()
     k = np.array([s[0].find(t) for t in t])
     if (k==0).sum()>0:
@@ -37,7 +38,7 @@ def split_name(s, t=['นาย','นางสาว','นาง','น.ส.','�
         if len(n)!=len(s[0]):
             t = s[0][s[0].find(n)+len(n):]
             # Next chr cannot be vowel
-            if ord(t[0]) < 3631: s[0] = t 
+            if ord(t[0]) not in c: s[0] = t 
         if (s[0]==n) & (len(s)>2): s = s[1:]
     if len(s)==1: s += ['']
     else: s = [s[0],' '.join(s[1:])]
